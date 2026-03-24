@@ -79,7 +79,7 @@ export default function Home() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">Gemini Movie Recommender</h1>
-          <p className="text-slate-500 mt-2">Powered by Gemini 2.5 Flash & FastAPI</p>
+          <p className="text-slate-500 mt-2">Powered by Gemini 2.5 Flash</p>
         </div>
 
         {/* Chat Interface */}
