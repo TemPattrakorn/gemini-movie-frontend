@@ -6,27 +6,53 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useTheme } from "next-themes";
 
-// Types for our state
 type Message = { role: "user" | "ai"; content: string };
 type Movie = { title: string; director: string; reason: string; streamingLink?: string | null };
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "ai", content: "Hi! I'm your AI movie expert. What kind of movie are you looking for today?" }
-  ]);
+  const { setTheme } = useTheme();
+
+  // 1. Start empty to prevent Next.js server/client timezone mismatch errors
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [movies, setMovies] = useState<Movie[]>([]);
 
-  // Auto-scroll to bottom of chat
   const scrollRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // 2. Client-side initialization for Time and Theme
+  useEffect(() => {
+    const currentHour = new Date().getHours();
+
+    // Theme Logic
+    const storedTheme = localStorage.getItem("theme");
+    if (!storedTheme || storedTheme === "system") {
+      const isNightTime = currentHour >= 18 || currentHour < 6;
+      setTheme(isNightTime ? "dark" : "light");
+    }
+
+    // Dynamic Greeting Logic
+    let greeting = "Good evening"; // Default for late night (18:00 - 04:59)
+    if (currentHour >= 5 && currentHour < 12) {
+      greeting = "Good morning";   // (05:00 - 11:59)
+    } else if (currentHour >= 12 && currentHour < 18) {
+      greeting = "Good afternoon"; // (12:00 - 17:59)
+    }
+
+    // Safely inject the initial message into the UI
+    setMessages([
+      { role: "ai", content: `${greeting}! I'm your AI movie expert. What kind of movie are you looking for today?` }
+    ]);
+  }, [setTheme]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +64,6 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // Send the request to your live Render Backend
       const res = await fetch("https://gemini-movie-recommender.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,17 +76,13 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to fetch response from API");
 
       const data = await res.json();
-      
-      // Save the session ID so the AI remembers the conversation
       setSessionId(data.session_id);
-
       const result = data.result;
 
       if (result.status === "clarifying") {
         setMessages((prev) => [...prev, { role: "ai", content: result.message }]);
       } else if (result.status === "success") {
         setMessages((prev) => [...prev, { role: "ai", content: "Here is what I recommend!" }]);
-        // Movies are now set instantly with streaming links attached by the backend
         setMovies(result.movies);
       } else {
         setMessages((prev) => [...prev, { role: "ai", content: "Oops, something went wrong with the AI format." }]);
@@ -77,20 +98,17 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center py-12 px-4 transition-colors duration-300">
       
-      {/* Dark Mode Toggle */}
       <div className="absolute top-4 right-4 md:top-8 md:right-8">
         <ModeToggle />
       </div>
 
       <div className="max-w-3xl w-full space-y-8 mt-8">
         
-        {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight">Gemini Movie Recommender</h1>
           <p className="text-muted-foreground mt-2">Powered by Gemini 2.5 Flash & FastAPI</p>
         </div>
 
-        {/* Chat Interface */}
         <Card className="w-full shadow-lg border-border">
           <CardHeader>
             <CardTitle>Chat with your AI Guide</CardTitle>
@@ -133,7 +151,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Movie Recommendations Display */}
         {movies.length > 0 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-2xl font-bold">Your Recommendations</h2>
