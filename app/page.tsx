@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Types for our state
+// 1. Type updated to expect streamingLink directly from the backend
 type Message = { role: "user" | "ai"; content: string };
-type Movie = { title: string; director: string; reason: string };
+type Movie = { title: string; director: string; reason: string; streamingLink?: string | null };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
@@ -19,7 +19,6 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [movies, setMovies] = useState<Movie[]>([]);
 
-  // Auto-scroll to bottom of chat
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (scrollRef.current) {
@@ -37,7 +36,6 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // Send the request to your live Render Backend
       const res = await fetch("https://gemini-movie-recommender.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,16 +48,15 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to fetch response from API");
 
       const data = await res.json();
-      
-      // Save the session ID so the AI remembers the conversation
       setSessionId(data.session_id);
-
       const result = data.result;
 
       if (result.status === "clarifying") {
         setMessages((prev) => [...prev, { role: "ai", content: result.message }]);
       } else if (result.status === "success") {
         setMessages((prev) => [...prev, { role: "ai", content: "Here is what I recommend!" }]);
+        
+        // 2. Beautifully simple: just set the movies directly from the backend payload!
         setMovies(result.movies);
       } else {
         setMessages((prev) => [...prev, { role: "ai", content: "Oops, something went wrong with the AI format." }]);
@@ -76,13 +73,11 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4">
       <div className="max-w-3xl w-full space-y-8">
         
-        {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">Gemini Movie Recommender</h1>
-          <p className="text-slate-500 mt-2">Powered by Gemini 2.5 Flash</p>
+          <p className="text-slate-500 mt-2">Powered by Gemini 2.5 Flash & FastAPI</p>
         </div>
 
-        {/* Chat Interface */}
         <Card className="w-full shadow-lg">
           <CardHeader>
             <CardTitle>Chat with your AI Guide</CardTitle>
@@ -124,20 +119,35 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Movie Recommendations Display */}
         {movies.length > 0 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-2xl font-bold text-slate-900">Your Recommendations</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {movies.map((movie, idx) => (
-                <Card key={idx} className="border-2 border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="text-xl">{movie.title}</CardTitle>
-                    <CardDescription>Directed by {movie.director}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-700">{movie.reason}</p>
-                  </CardContent>
+                <Card key={idx} className="border-2 border-slate-200 flex flex-col justify-between">
+                  <div>
+                    <CardHeader>
+                      <CardTitle className="text-xl">{movie.title}</CardTitle>
+                      <CardDescription>Directed by {movie.director}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-slate-700">{movie.reason}</p>
+                    </CardContent>
+                  </div>
+                  {/* 3. Render the Watch Now button dynamically based on the backend data */}
+                  <CardFooter>
+                    {movie.streamingLink ? (
+                      <Button asChild className="w-full" variant="default">
+                        <a href={movie.streamingLink} target="_blank" rel="noopener noreferrer">
+                          Watch on JustWatch
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button disabled variant="outline" className="w-full">
+                        Not available to stream
+                      </Button>
+                    )}
+                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -155,7 +165,6 @@ export default function Home() {
             </Button>
           </div>
         )}
-
       </div>
     </main>
   );
