@@ -14,7 +14,6 @@ type Movie = { title: string; director: string; reason: string; streamingLink?: 
 export default function Home() {
   const { setTheme } = useTheme();
 
-  // 1. Start empty to prevent Next.js server/client timezone mismatch errors
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,26 +28,26 @@ export default function Home() {
     }
   }, [messages]);
 
-  // 2. Client-side initialization for Time and Theme
   useEffect(() => {
     const currentHour = new Date().getHours();
 
-    // Theme Logic
-    const storedTheme = localStorage.getItem("theme");
-    if (!storedTheme || storedTheme === "system") {
+    // 1. Look for our custom flag instead of the default theme storage
+    const isManual = localStorage.getItem("theme-manually-set");
+
+    // Only apply the time logic if the user hasn't clicked the toggle yet
+    if (!isManual) {
       const isNightTime = currentHour >= 18 || currentHour < 6;
       setTheme(isNightTime ? "dark" : "light");
     }
 
-    // Dynamic Greeting Logic
-    let greeting = "Good evening"; // Default for late night (18:00 - 04:59)
+    // 2. Dynamic Greeting Logic
+    let greeting = "Good evening"; 
     if (currentHour >= 5 && currentHour < 12) {
-      greeting = "Good morning";   // (05:00 - 11:59)
+      greeting = "Good morning";   
     } else if (currentHour >= 12 && currentHour < 18) {
-      greeting = "Good afternoon"; // (12:00 - 17:59)
+      greeting = "Good afternoon"; 
     }
 
-    // Safely inject the initial message into the UI
     setMessages([
       { role: "ai", content: `${greeting}! I'm your AI movie expert. What kind of movie are you looking for today?` }
     ]);
@@ -106,7 +105,7 @@ export default function Home() {
         
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight">Gemini Movie Recommender</h1>
-          <p className="text-muted-foreground mt-2">Powered by Gemini 2.5 Flash & FastAPI</p>
+          <p className="text-muted-foreground mt-2">Powered by Gemini 2.5 Flash</p>
         </div>
 
         <Card className="w-full shadow-lg border-border">

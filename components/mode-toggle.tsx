@@ -8,12 +8,19 @@ import { Button } from "@/components/ui/button"
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
 
+  const handleToggle = () => {
+    // 1. Change the theme
+    setTheme(theme === "dark" ? "light" : "dark");
+    // 2. Leave a custom breadcrumb that the user manually took control
+    localStorage.setItem("theme-manually-set", "true");
+  }
+
   return (
     <Button
       variant="outline"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="rounded-full"
+      onClick={handleToggle}
+      className="rounded-full bg-background"
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
