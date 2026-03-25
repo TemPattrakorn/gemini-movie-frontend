@@ -25,3 +25,10 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    - name: Upload Playwright HTML Report
+      uses: actions/upload-artifact@v4
+      if: always() # Always upload, even if a UI test fails!
+      with:
+        name: frontend-playwright-report
+        path: playwright-report/
+        retention-days: 30
