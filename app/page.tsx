@@ -21,6 +21,7 @@ export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false); // Ref to track initialization
   
   useEffect(() => {
     if (scrollRef.current) {
@@ -29,6 +30,10 @@ export default function Home() {
   }, [messages]);
 
   useEffect(() => {
+    // Prevent the effect from running more than once
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     const currentHour = new Date().getHours();
 
     // 1. Look for our custom flag instead of the default theme storage
