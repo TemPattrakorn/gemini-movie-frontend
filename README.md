@@ -95,7 +95,7 @@ npx playwright show-report
 
 ## 🤝 Ecosystem
 
-This frontend is designed to work exclusively with the [Gemini Movie Recommender Backend API](https://github.com/TemPattrakorn/gemini-movie-backend). Refer to that repository for backend setup, API reference, and security documentation.
+This frontend is designed to work exclusively with the [Gemini Movie Recommender Backend API](https://github.com/TemPattrakorn/gemini-movie-recommender). Refer to that repository for backend setup, API reference, and security documentation.
 
 ---
 
