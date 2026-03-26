@@ -21,7 +21,7 @@ export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const initializedRef = useRef(false); // Ref to track initialization
+  const initializedRef = useRef(false);
   
   useEffect(() => {
     if (scrollRef.current) {
@@ -30,22 +30,17 @@ export default function Home() {
   }, [messages]);
 
   useEffect(() => {
-    // Prevent the effect from running more than once
     if (initializedRef.current) return;
     initializedRef.current = true;
 
     const currentHour = new Date().getHours();
-
-    // 1. Look for our custom flag instead of the default theme storage
     const isManual = localStorage.getItem("theme-manually-set");
 
-    // Only apply the time logic if the user hasn't clicked the toggle yet
     if (!isManual) {
       const isNightTime = currentHour >= 18 || currentHour < 6;
       setTheme(isNightTime ? "dark" : "light");
     }
 
-    // 2. Dynamic Greeting Logic
     let greeting = "Good evening"; 
     if (currentHour >= 5 && currentHour < 12) {
       greeting = "Good morning";   
@@ -68,7 +63,9 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("https://gemini-movie-recommender.onrender.com/chat", {
+      // --- THE PROXY UPDATE ---
+      // We now call our local Next.js server route instead of the public Render URL
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
